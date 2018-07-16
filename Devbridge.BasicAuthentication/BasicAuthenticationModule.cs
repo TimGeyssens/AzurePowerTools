@@ -261,32 +261,35 @@ namespace Devbridge.BasicAuthentication
 
         public void Init(HttpApplication context)
         {
-            var config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~/web.config");
-            var basicAuth = TraverseConfigSections<Configuration.BasicAuthenticationConfigurationSection>(config.RootSectionGroup);
-
-            if (basicAuth == null)
+            if (!context.Request.IsLocal)
             {
-                System.Diagnostics.Debug.WriteLine("BasicAuthenticationModule not started - Configuration not found. Make sure that BasicAuthenticationConfigurationSection section is defined.");
-                return;
+                var config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~/web.config");
+                var basicAuth = TraverseConfigSections<Configuration.BasicAuthenticationConfigurationSection>(config.RootSectionGroup);
+
+                if (basicAuth == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("BasicAuthenticationModule not started - Configuration not found. Make sure that BasicAuthenticationConfigurationSection section is defined.");
+                    return;
+                }
+
+                allowRedirects = basicAuth.AllowRedirects;
+                allowLocal = basicAuth.AllowLocal;
+
+                var appSetting = ConfigurationManager.AppSettings[EnabledAppSetting];
+                if (appSetting != null)
+                {
+                    isEnabled = appSetting == "true";
+                }
+
+                InitCredentials(basicAuth);
+                InitExcludes(basicAuth);
+
+                // Subscribe to the authenticate event to perform the authentication.
+                context.AuthenticateRequest += AuthenticateUser;
+
+                // Subscribe to the EndRequest event to issue the authentication challenge if necessary.
+                context.EndRequest += IssueAuthenticationChallenge;
             }
-
-            allowRedirects = basicAuth.AllowRedirects;
-            allowLocal = basicAuth.AllowLocal;
-
-            var appSetting = ConfigurationManager.AppSettings[EnabledAppSetting];
-            if (appSetting != null)
-            {
-                isEnabled = appSetting == "true";
-            }
-
-            InitCredentials(basicAuth);
-            InitExcludes(basicAuth);
-
-            // Subscribe to the authenticate event to perform the authentication.
-            context.AuthenticateRequest += AuthenticateUser;
-
-            // Subscribe to the EndRequest event to issue the authentication challenge if necessary.
-            context.EndRequest += IssueAuthenticationChallenge;
         }
 
         private void InitCredentials(Configuration.BasicAuthenticationConfigurationSection basicAuth)
