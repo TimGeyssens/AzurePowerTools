@@ -5,7 +5,7 @@ namespace Devbridge.BasicAuthentication.Configuration
     public class BasicAuthenticationConfigurationSection : ConfigurationSection
     {
         private const string CredentialsNode = "credentials";
-        private const string ExcludesNode = "excludes";
+        private const string WhiteListNode = "whitelist";
 
         /// <summary>
         /// Gets or sets the credentials.
@@ -52,11 +52,11 @@ namespace Devbridge.BasicAuthentication.Configuration
         /// <value>
         /// The URL exclusions.
         /// </value>
-        [ConfigurationProperty(ExcludesNode, IsRequired = false)]
-        public WhiteListElementCollection Excludes
+        [ConfigurationProperty(WhiteListNode, IsRequired = false)]
+        public WhiteListElementCollection WhiteList
         {
-            get { return (WhiteListElementCollection)this[ExcludesNode]; }
-            set { this[ExcludesNode] = value; }
+            get { return (WhiteListElementCollection)this[WhiteListNode]; }
+            set { this[WhiteListNode] = value; }
         }
     }
 }

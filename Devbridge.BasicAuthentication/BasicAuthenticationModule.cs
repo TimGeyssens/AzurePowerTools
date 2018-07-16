@@ -72,10 +72,8 @@ namespace Devbridge.BasicAuthentication
         /// </summary>
         private IDictionary<string, string> activeUsers;
 
-        /// <summary>
-        /// Exclude configuration - request URL is matched to dictionary key and request method is matched to the value of the same key-value pair.
-        /// </summary>
-        //private IDictionary<Regex, Regex> excludes;
+
+        private IEnumerable<string> whiteList;
 
         /// <summary>
         /// Indicates whether redirects are allowed without authentication.
@@ -143,6 +141,11 @@ namespace Devbridge.BasicAuthentication
             var context = ((HttpApplication)source).Context;
 
             if (allowLocal && context.Request.IsLocal)
+            {
+                return;
+            }
+
+            if (whiteList.Contains(context.Request.UserHostAddress))
             {
                 return;
             }
@@ -281,7 +284,7 @@ namespace Devbridge.BasicAuthentication
             }
 
             InitCredentials(basicAuth);
-            //InitExcludes(basicAuth);
+            InitWhiteList(basicAuth);
 
             // Subscribe to the authenticate event to perform the authentication.
             context.AuthenticateRequest += AuthenticateUser;
@@ -302,37 +305,22 @@ namespace Devbridge.BasicAuthentication
             }
         }
 
-        //private void InitExcludes(Configuration.BasicAuthenticationConfigurationSection basicAuth)
-        //{
-        //    var excludesAsString = new Dictionary<string, string>();
-        //    excludes = new Dictionary<Regex, Regex>();
-        //    var allowAnyRegex = AllowAnyRegex.ToString();
+        private void InitWhiteList(Configuration.BasicAuthenticationConfigurationSection basicAuth)
+        {
 
-        //    for (int i = 0; i < basicAuth.Excludes.Count; i++)
-        //    {
-        //        var excludeUrl = basicAuth.Excludes[i].Url;
-        //        var excludeVerb = basicAuth.Excludes[i].Verb;
+            var wl = new List<string>();
 
-        //        if (string.IsNullOrEmpty(excludeUrl))
-        //        {
-        //            excludeUrl = allowAnyRegex;
-        //        }
-        //        if (string.IsNullOrEmpty(excludeVerb))
-        //        {
-        //            excludeVerb = allowAnyRegex;
-        //        }
+            if (basicAuth.WhiteList != null)
+            {
+                for (int i = 0; i < basicAuth.WhiteList.Count; i++)
+                {
+                    wl.Add(basicAuth.WhiteList[i].Ip);
+                }
+            }
+            whiteList = wl;
 
-        //        excludesAsString[excludeUrl] = excludeVerb;
-        //    }
-
-        //    foreach (var url in excludesAsString.Keys)
-        //    {
-        //        var urlRegex = url == allowAnyRegex ? AllowAnyRegex : new Regex(url, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        //        var verbRegex = excludesAsString[url] == allowAnyRegex ? AllowAnyRegex : new Regex(excludesAsString[url], RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        //        excludes[urlRegex] = verbRegex;
-        //    }
-        //}
+            
+        }
 
         private T TraverseConfigSections<T>(ConfigurationSectionGroup group) where T : ConfigurationSection
         {
