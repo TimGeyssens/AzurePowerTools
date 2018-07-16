@@ -75,7 +75,7 @@ namespace Devbridge.BasicAuthentication
         /// <summary>
         /// Exclude configuration - request URL is matched to dictionary key and request method is matched to the value of the same key-value pair.
         /// </summary>
-        private IDictionary<Regex, Regex> excludes;
+        //private IDictionary<Regex, Regex> excludes;
 
         /// <summary>
         /// Indicates whether redirects are allowed without authentication.
@@ -187,16 +187,16 @@ namespace Devbridge.BasicAuthentication
                 return shouldChallengeCache[key];
             }
 
-            // if value is not found in cache check exclude rules
-            foreach (var urlVerbRegex in excludes)
-            {
-                if ((urlVerbRegex.Key.IsMatch(context.Request.Path) || urlVerbRegex.Key.IsMatch(context.Request.Url.Host)) && urlVerbRegex.Value.IsMatch(context.Request.HttpMethod))
-                {
-                    shouldChallengeCache[key] = false;
+            //// if value is not found in cache check exclude rules
+            //foreach (var urlVerbRegex in excludes)
+            //{
+            //    if ((urlVerbRegex.Key.IsMatch(context.Request.Path) || urlVerbRegex.Key.IsMatch(context.Request.Url.Host)) && urlVerbRegex.Value.IsMatch(context.Request.HttpMethod))
+            //    {
+            //        shouldChallengeCache[key] = false;
 
-                    return false;
-                }
-            }
+            //        return false;
+            //    }
+            //}
 
             shouldChallengeCache[key] = true;
             return true;
@@ -261,35 +261,34 @@ namespace Devbridge.BasicAuthentication
 
         public void Init(HttpApplication context)
         {
-            if (!context.Request.IsLocal)
+           
+            var config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~/web.config");
+            var basicAuth = TraverseConfigSections<Configuration.BasicAuthenticationConfigurationSection>(config.RootSectionGroup);
+
+            if (basicAuth == null)
             {
-                var config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~/web.config");
-                var basicAuth = TraverseConfigSections<Configuration.BasicAuthenticationConfigurationSection>(config.RootSectionGroup);
-
-                if (basicAuth == null)
-                {
-                    System.Diagnostics.Debug.WriteLine("BasicAuthenticationModule not started - Configuration not found. Make sure that BasicAuthenticationConfigurationSection section is defined.");
-                    return;
-                }
-
-                allowRedirects = basicAuth.AllowRedirects;
-                allowLocal = basicAuth.AllowLocal;
-
-                var appSetting = ConfigurationManager.AppSettings[EnabledAppSetting];
-                if (appSetting != null)
-                {
-                    isEnabled = appSetting == "true";
-                }
-
-                InitCredentials(basicAuth);
-                InitExcludes(basicAuth);
-
-                // Subscribe to the authenticate event to perform the authentication.
-                context.AuthenticateRequest += AuthenticateUser;
-
-                // Subscribe to the EndRequest event to issue the authentication challenge if necessary.
-                context.EndRequest += IssueAuthenticationChallenge;
+                System.Diagnostics.Debug.WriteLine("BasicAuthenticationModule not started - Configuration not found. Make sure that BasicAuthenticationConfigurationSection section is defined.");
+                return;
             }
+
+            allowRedirects = basicAuth.AllowRedirects;
+            allowLocal = basicAuth.AllowLocal;
+
+            var appSetting = ConfigurationManager.AppSettings[EnabledAppSetting];
+            if (appSetting != null)
+            {
+                isEnabled = appSetting == "true";
+            }
+
+            InitCredentials(basicAuth);
+            //InitExcludes(basicAuth);
+
+            // Subscribe to the authenticate event to perform the authentication.
+            context.AuthenticateRequest += AuthenticateUser;
+
+            // Subscribe to the EndRequest event to issue the authentication challenge if necessary.
+            context.EndRequest += IssueAuthenticationChallenge;
+           
         }
 
         private void InitCredentials(Configuration.BasicAuthenticationConfigurationSection basicAuth)
@@ -303,37 +302,37 @@ namespace Devbridge.BasicAuthentication
             }
         }
 
-        private void InitExcludes(Configuration.BasicAuthenticationConfigurationSection basicAuth)
-        {
-            var excludesAsString = new Dictionary<string, string>();
-            excludes = new Dictionary<Regex, Regex>();
-            var allowAnyRegex = AllowAnyRegex.ToString();
+        //private void InitExcludes(Configuration.BasicAuthenticationConfigurationSection basicAuth)
+        //{
+        //    var excludesAsString = new Dictionary<string, string>();
+        //    excludes = new Dictionary<Regex, Regex>();
+        //    var allowAnyRegex = AllowAnyRegex.ToString();
 
-            for (int i = 0; i < basicAuth.Excludes.Count; i++)
-            {
-                var excludeUrl = basicAuth.Excludes[i].Url;
-                var excludeVerb = basicAuth.Excludes[i].Verb;
+        //    for (int i = 0; i < basicAuth.Excludes.Count; i++)
+        //    {
+        //        var excludeUrl = basicAuth.Excludes[i].Url;
+        //        var excludeVerb = basicAuth.Excludes[i].Verb;
 
-                if (string.IsNullOrEmpty(excludeUrl))
-                {
-                    excludeUrl = allowAnyRegex;
-                }
-                if (string.IsNullOrEmpty(excludeVerb))
-                {
-                    excludeVerb = allowAnyRegex;
-                }
+        //        if (string.IsNullOrEmpty(excludeUrl))
+        //        {
+        //            excludeUrl = allowAnyRegex;
+        //        }
+        //        if (string.IsNullOrEmpty(excludeVerb))
+        //        {
+        //            excludeVerb = allowAnyRegex;
+        //        }
 
-                excludesAsString[excludeUrl] = excludeVerb;
-            }
+        //        excludesAsString[excludeUrl] = excludeVerb;
+        //    }
 
-            foreach (var url in excludesAsString.Keys)
-            {
-                var urlRegex = url == allowAnyRegex ? AllowAnyRegex : new Regex(url, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                var verbRegex = excludesAsString[url] == allowAnyRegex ? AllowAnyRegex : new Regex(excludesAsString[url], RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        //    foreach (var url in excludesAsString.Keys)
+        //    {
+        //        var urlRegex = url == allowAnyRegex ? AllowAnyRegex : new Regex(url, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        //        var verbRegex = excludesAsString[url] == allowAnyRegex ? AllowAnyRegex : new Regex(excludesAsString[url], RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-                excludes[urlRegex] = verbRegex;
-            }
-        }
+        //        excludes[urlRegex] = verbRegex;
+        //    }
+        //}
 
         private T TraverseConfigSections<T>(ConfigurationSectionGroup group) where T : ConfigurationSection
         {

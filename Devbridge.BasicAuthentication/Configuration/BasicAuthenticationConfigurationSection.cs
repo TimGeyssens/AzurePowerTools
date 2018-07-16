@@ -39,7 +39,7 @@ namespace Devbridge.BasicAuthentication.Configuration
         /// <value>
         ///   <c>true</c> to allow redirects; otherwise, <c>false</c>.
         /// </value>
-        [ConfigurationProperty("allowLocal", DefaultValue = "false", IsRequired = false)]
+        [ConfigurationProperty("allowLocal", DefaultValue = "true", IsRequired = false)]
         public bool AllowLocal
         {
             get { return (bool)this["allowLocal"]; }
@@ -53,9 +53,9 @@ namespace Devbridge.BasicAuthentication.Configuration
         /// The URL exclusions.
         /// </value>
         [ConfigurationProperty(ExcludesNode, IsRequired = false)]
-        public ExcludeElementCollection Excludes
+        public WhiteListElementCollection Excludes
         {
-            get { return (ExcludeElementCollection)this[ExcludesNode]; }
+            get { return (WhiteListElementCollection)this[ExcludesNode]; }
             set { this[ExcludesNode] = value; }
         }
     }
