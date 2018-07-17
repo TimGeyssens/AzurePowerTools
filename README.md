@@ -3,7 +3,11 @@ Basic authentication for Windows Azure websites is a HTTP managed module that pr
 
 Forked and modified from https://github.com/devbridge/AzurePowerTools
 
-Allows you to also specify a IP whitelist and doesn't require auth when running local
+To disable you can set a app setting
+
+	<add key="BasicAuthEnabled" value="false"/>
+
+Allows you to specify a IP whitelist and doesn't require auth when running local
 
     <basicAuth>
   		<credentials>
