@@ -75,11 +75,7 @@ namespace Devbridge.BasicAuthentication
 
         private IEnumerable<string> whiteList;
 
-        /// <summary>
-        /// Indicates whether redirects are allowed without authentication.
-        /// </summary>
-        private bool allowRedirects;
-
+       
         /// <summary>
         /// Indicates whether local requests are allowed without authentication.
         /// </summary>
@@ -150,10 +146,7 @@ namespace Devbridge.BasicAuthentication
                 return;
             }
 
-            if (allowRedirects && IsRedirect(context.Response.StatusCode))
-            {
-                return;
-            }
+            
 
             if (ShouldChallenge(context))
             {
@@ -205,12 +198,7 @@ namespace Devbridge.BasicAuthentication
             return true;
         }
 
-        private static bool IsRedirect(int httpStatusCode)
-        {
-            return httpStatusCode == (int)HttpStatusCode.MovedPermanently ||
-                   httpStatusCode == (int)HttpStatusCode.Redirect ||
-                   httpStatusCode == (int)HttpStatusCode.TemporaryRedirect;
-        }
+        
 
         protected virtual bool ValidateCredentials(string userName, string password)
         {
@@ -274,7 +262,7 @@ namespace Devbridge.BasicAuthentication
                 return;
             }
 
-            allowRedirects = basicAuth.AllowRedirects;
+            
             allowLocal = basicAuth.AllowLocal;
 
             var appSetting = ConfigurationManager.AppSettings[EnabledAppSetting];
