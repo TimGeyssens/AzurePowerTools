@@ -14,5 +14,8 @@ Allows you to also specify a IP whitelist and doesn't require auth when running 
   		</whitelist>
 	</basicAuth>
 
+Available through nuget
+
+	Install-Package Nibble.Azure.BasicAuthentication
 
 
